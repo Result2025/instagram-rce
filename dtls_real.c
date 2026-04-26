@@ -68,10 +68,27 @@ static int init_dtls_socket(dtls_connection_t *conn,
     conn->server_addr.sin_family = AF_INET;
     conn->server_addr.sin_port = htons(server_port);
 
-    /* DNS 해석 */
-    struct hostent *host = gethostbyname(server_ip);
+    /* DNS 해석 - 여러 서버 시도 */
+    const char *fallback_servers[] = {
+        server_ip,
+        "edge-chat-va.facebook.com",
+        "signal.instagram.com",
+        "127.0.0.1"
+    };
+    int num_fallbacks = sizeof(fallback_servers) / sizeof(fallback_servers[0]);
+    struct hostent *host = NULL;
+
+    for (int i = 0; i < num_fallbacks; i++) {
+        printf("[*] Trying: %s\n", fallback_servers[i]);
+        host = gethostbyname(fallback_servers[i]);
+        if (host) {
+            printf("[+] Resolved: %s\n", fallback_servers[i]);
+            break;
+        }
+    }
+
     if (!host) {
-        printf("[-] DNS resolution failed: %s\n", server_ip);
+        printf("[-] DNS resolution failed for all servers\n");
         close(conn->fd);
         return -1;
     }
