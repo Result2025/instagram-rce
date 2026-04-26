@@ -25,9 +25,11 @@
 
 /* Constants */
 #define TARGET_RTC_PORT 43479
-/* Standard Instagram servers */
-#define INSTAGRAM_RTC_SERVER "rtc.instagram.com"
-#define INSTAGRAM_STUN_SERVER "stun.instagram.com"
+/* Facebook/Instagram RTC Servers (Multiple fallbacks) */
+#define INSTAGRAM_RTC_SERVER "edge-chat-va.facebook.com"
+#define INSTAGRAM_RTC_SERVER_2 "rtc.instagram.com"
+#define INSTAGRAM_RTC_SERVER_3 "127.0.0.1"  /* Localhost fallback */
+#define INSTAGRAM_STUN_SERVER "stun.l.google.com"
 #define INSTAGRAM_API_BASE "https://www.instagram.com/api/v1"
 #define INSTAGRAM_GRAPHQL "https://www.instagram.com/graphql/query"
 
