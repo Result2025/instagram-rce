@@ -95,6 +95,7 @@ static int phase_1_graphql_video_call(const char *target_username) {
         int ret = pclose(fp);
 
         printf("  [+] 응답: %zu bytes\n", response_len);
+        printf("  [+] 응답 내용: %.500s\n", response);
 
         /* GraphQL 응답 검증 */
         if (response_len > 0) {
